@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Exercice 2: Analyse de séries temporelles financières
@@ -73,11 +74,45 @@ public class FinancialTimeSeriesAnalyzer {
         }
         
         // Votre implémentation ici...
-        // 1. Calculer les rendements quotidiens
+        // 1. Calculer les rendements quotidiens, moyenne des rendements quotidiens
         // 2. Calculer l'écart-type des rendements
         // 3. Annualiser (multiplier par sqrt(252) pour les jours de bourse)
-        
-        return 0.0;
+
+        // Calcul des rendement quotidien
+        List<Double> rendementQuotidien = new ArrayList<>();
+
+        for(int i = 1; i < prices.size(); i++) {
+            double currentPrice = prices.get(i).price;
+            double beforeCurrentPrice = prices.get(i - 1).price;
+            double rendement = (currentPrice - beforeCurrentPrice) / beforeCurrentPrice;
+
+            rendementQuotidien.add(rendement);
+        }
+
+        //System.out.println(rendementQuotidien.stream().map(String::valueOf).collect(Collectors.joining(", ")));
+
+        // calcul de la moyenne des rendements
+        double avgRendement = 0;
+        double sommeRendement =0;
+        for(double rendement : rendementQuotidien ){
+            sommeRendement += rendement;
+        }
+        avgRendement = sommeRendement / rendementQuotidien.size();
+
+        // Calcul variance et ecart-type
+        //variance = somme((rendement[i] - moyenne)²) / (n - 1)
+        //écart_type = √variance
+        double variance =  0;
+        double sommeVariance = 0;
+        double ecartType = 0;
+        for(int i = 0; i < rendementQuotidien.size(); i++) {
+            sommeVariance += (rendementQuotidien.get(i) - avgRendement) * (rendementQuotidien.get(i) - avgRendement);
+        }
+
+        variance = sommeVariance / (rendementQuotidien.size() - 1);
+        ecartType = Math.sqrt(variance);
+
+        return ecartType * Math.sqrt(252);
     }
     
     /**
@@ -98,6 +133,20 @@ public class FinancialTimeSeriesAnalyzer {
         
         // Votre implémentation ici...
         // Un croisement se produit quand SMA courte passe au-dessus/en dessous de SMA longue
+        for(int i = 1; i < shortSMA.size(); i++) {
+            if((shortSMA.get(i) != null && longSMA.get(i) != null && shortSMA.get(i-1) != null && longSMA.get(i-1) != null)) {
+                double currentShortSmaPoint = shortSMA.get(i);
+                double beforeCurrentShortSmaPoint = shortSMA.get(i-1);
+                double currentLongSmaPoint = longSMA.get(i);
+                double beforeCurrentLongSmaPoint = longSMA.get(i-1);
+
+                if((beforeCurrentShortSmaPoint < beforeCurrentLongSmaPoint && currentShortSmaPoint > currentLongSmaPoint)
+                        || (beforeCurrentShortSmaPoint > beforeCurrentLongSmaPoint && currentShortSmaPoint < currentLongSmaPoint)){
+
+                    crossoverPoints.add(i);
+                }
+            }
+        }
         
         return crossoverPoints;
     }
@@ -152,8 +201,24 @@ public class FinancialTimeSeriesAnalyzer {
         
         // Votre implémentation ici...
         // Drawdown = (valeur_max - valeur_actuelle) / valeur_max
+
+        double maxValue = prices.get(0).price;
+        double maxDrawdown = 0;
+        for(int i = 1; i < prices.size(); i++){
+
+            double currentPrice = prices.get(i).price;
+            if(currentPrice > maxValue) {
+                maxValue = currentPrice;
+            }
+
+            double drawdown = (maxValue - currentPrice) / maxValue;
+            if(drawdown > maxDrawdown) {
+                maxDrawdown = drawdown;
+            }
+
+        }
         
-        return 0.0;
+        return maxDrawdown;
     }
     
     public static void main(String[] args) {
